@@ -98,6 +98,7 @@ class AUTOQTLBase(BaseEstimator):
         early_stop = None,
         verbosity = 0,
         log_file = None,
+        selection = 'NSGA2'
     ):
         """Setting up the genetic programming algorithm for pipeline optimization. All the parameters are initialized with the default values.
 
@@ -250,6 +251,7 @@ class AUTOQTLBase(BaseEstimator):
 
         self.random_state = random_state
         self.log_file = log_file
+        self.selection = selection
 
     def _setup_template(self, template):
         """Setup the template for the machine learning pipeline.
@@ -541,8 +543,14 @@ class AUTOQTLBase(BaseEstimator):
             "population", tools.initRepeat, list, self._toolbox.individual
             )
             self._toolbox.register("compile", self._compile_to_sklearn)
-            self._toolbox.register("select", tools.selNSGA2)
+
             self._toolbox.register("mate", self._mate_operator)
+
+            if self.selection == 'NSGA2':
+                self._toolbox.register("select", tools.selNSGA2)
+            elif self.selection == 'Lexicase':
+                self._toolbox.register("select", tools.selection.selLexicase)
+
             if self.tree_structure:
                 self._toolbox.register(
                 "expr_mut", self._gen_grow_safe, min_=self._min, max_=self._max + 1
@@ -2227,162 +2235,6 @@ class AUTOQTLBase(BaseEstimator):
             rmtree(self._cachedir)
             self._memory = None
 
-    # # Trying out feature importance with permutation importance score
-    # def get_feature_importance(self, X, y, random_state):
-    #     """
-    #      Parameters
-    #     ----------
-    #     """
-
-    #     self.pipeline_for_feature_importance_ = {}
-    #     self.fitted_pipeline_for_feature_importance =[]
-    #     """for key, value in self.pareto_front_fitted_pipelines_.items():
-    #         pipeline_estimator = value
-
-    #     print(pipeline_estimator)"""
-
-    #     for pipeline in self._pareto_front.items:
-    #                 self.pipeline_for_feature_importance_[
-    #                     str(pipeline)
-    #                 ] = self._toolbox.compile(expr=pipeline)
-
-    #                 with warnings.catch_warnings():
-    #                     warnings.simplefilter("ignore")
-    #                     self.pipeline_for_feature_importance_[str(pipeline)].fit(
-    #                         X, y
-    #                     )
-    #                     self.fitted_pipeline_for_feature_importance.append(self.pipeline_for_feature_importance_[str(pipeline)].fit(
-    #                         X, y
-    #                     ))
-
-    #     #print(self.pipeline_for_feature_importance_)
-    #     #print(self.fitted_pipeline_for_feature_importance[0])
-
-    #     """for key, value in self.pipeline_for_feature_importance_.items():
-    #         pipeline_estimator = value"""
-
-    #     pipeline_estimator = self.fitted_pipeline_for_feature_importance[2]
-    #     print(pipeline_estimator)
-
-
-    #      # Printing the final pipeline
-    #     print("Final Pareto Front at the end of the optimization process: ")
-    #     for pipeline, pipeline_scores in zip(self._pareto_front.items, reversed(self._pareto_front.keys)):
-    #         pipeline_to_be_printed = self.print_pipeline(pipeline)
-    #         print('\nScore on D1 = {0},\tScore on D2 = {1},\tPipeline: {2}'.format(
-    #                         pipeline_scores.wvalues[0],
-    #                         pipeline_scores.wvalues[1],
-    #                         pipeline_to_be_printed))
-    #     # Testing
-    #     """estimators = [('feature_extraction', VarianceThreshold(threshold=0.25)), ('regression', LinearRegression())]
-    #     pipeline = Pipeline(estimators)
-    #     pipeline.fit(X, y)"""
-    #     # Putting output to a text file
-    #     """file_path = 'output.txt'
-    #     sys.stdout = open(file_path, "w")
-    #     for fitted_pipeline in self.fitted_pipeline_for_feature_importance:
-    #         print("The Pipeline being evaluated: ", fitted_pipeline)
-    #         permutation_importance_object = permutation_importance(estimator=fitted_pipeline, X=X, y=y, n_repeats=5, random_state=random_state)
-    #         for i in permutation_importance_object.importances_mean.argsort()[::-1]:
-    #             print(f"{X.columns[i]:<8}"
-    #                 f"{permutation_importance_object.importances_mean[i]:.3f}")"""
-
-    #     permutation_importance_object = permutation_importance(estimator=pipeline_estimator, X=X, y=y, n_repeats=5, random_state=random_state)
-    #     for i in permutation_importance_object.importances_mean.argsort()[::-1]:
-    #             print(f"{X.columns[i]:<8}"
-    #                 f"{permutation_importance_object.importances_mean[i]:.3f}")
-
-
-
-    # def get_shap_values(self, X, y):
-    #     estimators = [('feature_extraction', VarianceThreshold(threshold=0.25)), ('regression', LinearRegression())]
-    #     pipeline = Pipeline(estimators)
-
-    #     pipeline.fit(X, y)
-
-    #     print(X.shape[1])
-    #     X_background = shap.utils.sample(X, 2500)
-    #     num_features = X.shape[1]
-    #     max_evals = max(500, 2 * num_features + 1)
-    #     explainer = shap.Explainer(self.fitted_pipeline_.predict, X)
-    #     shap_values = explainer(X, max_evals=max_evals)
-    #     shap.summary_plot(shap_values, X, plot_type='bar')
-
-
-     #############################################################################################################################
-    # # Getting test R^2 values (basically holdout R^2 values) for the pipelines in the pareto front
-    # def get_test_r2(self, d1_X, d1_y, d2_X, d2_y, holdout_X, holdout_y, feature_80, target_80, entire_X, entire_y):
-
-    #     self.final_pareto_pipelines_testR2 = {}
-    #     self.fitted_final_pareto_pipelines_testR2 =[]
-
-    #     for pipeline in self._pareto_front.items:
-    #                 self.final_pareto_pipelines_testR2[
-    #                     str(pipeline)
-    #                 ] = self._toolbox.compile(expr=pipeline)
-
-    #                 with warnings.catch_warnings():
-    #                     warnings.simplefilter("ignore")
-    #                     self.final_pareto_pipelines_testR2[str(pipeline)].fit(
-    #                         feature_80, target_80
-    #                     )
-    #                     self.fitted_final_pareto_pipelines_testR2.append(self.final_pareto_pipelines_testR2[str(pipeline)].fit(
-    #                         feature_80, target_80
-    #                     ))
-
-    #     final_output_file_path = 'EvaluationOnHoldout.txt'
-    #     sys.stdout = open(final_output_file_path, "w")
-
-
-
-    #     for pareto_pipeline in self.fitted_final_pareto_pipelines_testR2:
-    #         print("\n The Pipeline being evaluated: \n", pareto_pipeline)
-    #         #score = partial_wrapped_score(pareto_pipeline, holdout_X, holdout_y)
-    #         score_80 = pareto_pipeline.score(feature_80, target_80)
-    #         score_holdout_entireDataTrained = pareto_pipeline.score(holdout_X, holdout_y)
-
-    #         print("\n Entire dataset(80%) R^2 trained on entire dataset(80%): ", score_80)
-    #         print("\n Holdout data R^2 trained on entire dataset(80%): ", score_holdout_entireDataTrained)
-
-    #         # To get the D1 train score
-    #         pareto_pipeline.fit(d1_X, d1_y)
-    #         score_d1_trained_d1 = pareto_pipeline.score(d1_X, d1_y)
-    #         print("\n Dataset D1 score on trained D1: ", score_d1_trained_d1)
-
-
-    #         # To get entire datatset
-    #         pareto_pipeline.fit(entire_X, entire_y)
-    #         score_full_trained_full = pareto_pipeline.score(entire_X, entire_y)
-    #         print("\n Entire dataset R^2 using pipeline: ", score_full_trained_full)
-
-    # def get_permutation_importance(self, X, y, random_state):
-    #     self.pipeline_for_feature_importance_ = {}
-    #     self.fitted_pipeline_for_feature_importance =[]
-    #     for pipeline in self._pareto_front.items:
-    #                 self.pipeline_for_feature_importance_[
-    #                     str(pipeline)
-    #                 ] = self._toolbox.compile(expr=pipeline)
-
-    #                 with warnings.catch_warnings():
-    #                     warnings.simplefilter("ignore")
-    #                     self.pipeline_for_feature_importance_[str(pipeline)].fit(
-    #                         X, y
-    #                     )
-    #                     self.fitted_pipeline_for_feature_importance.append(self.pipeline_for_feature_importance_[str(pipeline)].fit(
-    #                         X, y
-    #                     ))
-    #     file_path = 'PermutationFeatureImportance.txt'
-    #     sys.stdout = open(file_path, "w")
-
-    #     # Permutation Feature Importance
-    #     print("Feature Importance: \n ")
-    #     for fitted_pipeline in self.fitted_pipeline_for_feature_importance:
-    #         print("\nThe Pipeline being evaluated: \n", fitted_pipeline)
-    #         permutation_importance_object = permutation_importance(estimator=fitted_pipeline, X=X, y=y, n_repeats=5, random_state=random_state)
-    #         for i in permutation_importance_object.importances_mean.argsort()[::-1]:
-    #             print(f"{X.columns[i]:<20}"
-    #                 f"{permutation_importance_object.importances_mean[i]:.3f}")
-
     # Getting shap values in a separate text file and shap plots in a folder
     def get_shap_values(self, X, y, random_state):
         self.pipeline_for_feature_importance_ = {}
@@ -2776,3 +2628,7 @@ class AUTOQTLBase(BaseEstimator):
         #plt.savefig('pareto_plot_BMIPathways_12.png')
         #plt.close()
         return plt
+
+
+    def get_pareto_front(self):
+        return self._pareto_front
