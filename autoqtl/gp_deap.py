@@ -382,31 +382,31 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, pbar,
 def _wrapped_score(sklearn_pipeline, features, target, scoring_function,
                     sample_weight=None):
     """Fit estimator and compute scores for a given dataset split.
-    
+
     Parameters
     ----------
     sklearn_pipeline : pipeline object implementing 'fit'
         The object to use to fit the data.
-    
+
     features : array-like of shape at least 2D
         The data to fit.
-    
+
     target : array-like, optional, default: None
         The target variable to try to predict in the case of
         supervised learning.
-    
+
     scoring_function : callable
         A scorer callable object / function with signature
         ``scorer(estimator, X, y)``.
-    
+
     sample weight : array-like, optional
-        List of sample weights to balance ( or un-balance) the dataset target as needed 
-        
+        List of sample weights to balance ( or un-balance) the dataset target as needed
+
     Returns
     -------
     score : float
         The score of the pipeline
-        
+
     """
     sample_weight_dict = set_sample_weight(sklearn_pipeline.steps, sample_weight)
 
@@ -418,15 +418,15 @@ def _wrapped_score(sklearn_pipeline, features, target, scoring_function,
     """features_train, features_test, target_train, target_test = train_test_split(features, target, test_size=0.2)
     sklearn_pipeline.fit(features_train, target_train, sample_weight_dict)
     pipeline_score = sklearn_pipeline.score(features_test, target_test)"""
-    
+
     try:
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
 
             score = scorer(sklearn_pipeline, features, target) # will return the sklearn_pipeline score using the scoring function
-            
+
         return score
-    
+
     except TimeoutError:
         return Timeout
     except Exception as e:
@@ -436,15 +436,15 @@ def _wrapped_score(sklearn_pipeline, features, target, scoring_function,
 # Printing the pareto front items in a user-friendly manner. Should look into code reusability.
 def print_pareto_pipeline(individual):
         """Print the pipeline in a user-friendly manner.
-        
+
         Parameters
         ----------
         individual: Pareto front individuals
             Individual which should be represented by a pretty string
-            
+
         Returns
         A string suitable for display
-        
+
         """
         dirty_string = str(individual)
 
@@ -471,7 +471,7 @@ def get_feature_size(sklearn_pipeline, features, target):
             X_index = np.arange(len(feature_names)).reshape(1,-1)
             indexes = transformer.transform(X_index).tolist()
             feature_names = feature_names[tuple(indexes)]
-    #print (len(feature_names))  
+    #print (len(feature_names))
     return  len(feature_names)
 
 # Getting score on split two
@@ -479,10 +479,10 @@ def get_score_on_fitted_pipeline(sklearn_pipeline, X_learner, y_learner, X_test,
     scorer = check_scoring(sklearn_pipeline, scoring=scoring_function)
 
     sklearn_pipeline.fit(X_learner, y_learner)
-    
 
-    score = scorer(sklearn_pipeline, X_test, y_test) # will return the result of sklearn pipeline score? Yes it does. 
-            
+
+    score = scorer(sklearn_pipeline, X_test, y_test) # will return the result of sklearn pipeline score? Yes it does.
+
     return score
 
 # new function added to return evolution history

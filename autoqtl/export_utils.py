@@ -8,7 +8,7 @@ def expr_to_tree(ind, pset):
     ind: deap.creator.Individual
        The pipeline that is being exported
 
-    pset: Primitive set for pipeline generation 
+    pset: Primitive set for pipeline generation
 
     Returns
     -------
@@ -200,7 +200,7 @@ def set_param_recursive(pipeline_steps, parameter, value):
 
 # Function to generate source code for a AUTOQTL pipeline
 def export_pipeline(
-    exported_pipleine, 
+    exported_pipleine,
     operators,
     pset,
     impute=False,
@@ -208,8 +208,8 @@ def export_pipeline(
     random_state=None,
      data_file_path="",
 ):
-    """Generate source code for a AUTOQTL pipeline. 
-        
+    """Generate source code for a AUTOQTL pipeline.
+
     Parameters
     ----------
     exported_pipeline : deap.creator.Individual
@@ -258,7 +258,7 @@ tpot_data = pd.read_csv('{}', sep='COLUMN_SEPARATOR', dtype=np.float64)
 features = tpot_data.drop('target', axis=1)
 training_features, testing_features, training_target, testing_target = \\
             train_test_split(features, tpot_data['target'], random_state={})""".format(data_file_path, random_state)
-    
+
     # Add the imputation step if it was used by TPOT
     if impute:
         pipeline_text += """
