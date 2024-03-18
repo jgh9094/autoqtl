@@ -75,7 +75,7 @@ except:
 
 class AUTOQTLBase(BaseEstimator):
     """Automatically creates and optimizes machine learning pipelines using Genetic Programming. """
-    
+
     regression = None # set to True by child class. Will be set to false in case of classification. We plan to include 'classification' functionalities in the future.
 
     def __init__(
@@ -99,8 +99,8 @@ class AUTOQTLBase(BaseEstimator):
         verbosity = 0,
         log_file = None,
     ):
-        """Setting up the genetic programming algorithm for pipeline optimization. All the parameters are initialized with the default values. 
-        
+        """Setting up the genetic programming algorithm for pipeline optimization. All the parameters are initialized with the default values.
+
         Parameters
         ----------
         generations: int or None, optional (default: 100)
@@ -110,67 +110,67 @@ class AUTOQTLBase(BaseEstimator):
             Generally, AutoQTL will work better when you give it more generations (and
             therefore time) to optimize the pipeline but it also depends on the complexity of the data. AutoQTL will evaluate
             POPULATION_SIZE + GENERATIONS x OFFSPRING_SIZE pipelines in total.
-        
+
         population_size: int, optional (default: 100)
             Number of individuals to retain in the GP population every generation.
             Generally, AutoQTL will work better when you give it more individuals
             (and therefore time) to optimize the pipeline. AUTOQTL will evaluate
             POPULATION_SIZE + GENERATIONS x OFFSPRING_SIZE pipelines in total.
-        
+
         offspring_size: int, optional (default: None)
             Number of offspring to produce in each GP generation.
             By default, offspring_size = population_size.
-        
+
         mutation_rate: float, optional (default: 0.9)
             Mutation rate for the genetic programming algorithm in the range [0.0, 1.0].
             This parameter tells the GP algorithm how many pipelines to apply random
             changes to every generation. We recommend using the default parameter unless
             you understand how the mutation rate affects GP algorithms.
-        
+
         crossover_rate: float, optional (default: 0.1)
             Crossover rate for the genetic programming algorithm in the range [0.0, 1.0].
             This parameter tells the genetic programming algorithm how many pipelines to
             "breed" every generation. We recommend using the default parameter unless you
             understand how the mutation rate affects GP algorithms.
-        
+
         scoring: string or callable, optional
             Function used to evaluate the quality of a given pipeline for the
             problem. By default, coeeficient of determination (r^2) is used for regression problems.
             Other built-in Regression metrics that can be used:
             ['neg_median_absolute_error', 'neg_mean_absolute_error',
             'neg_mean_squared_error', 'r2']
-        
+
         subsample: float, optional (default: 1.0)
             Subsample ratio of the training instance. Setting it to 0.5 means that AutoQTL
             randomly collects half of training samples for pipeline optimization process.
-        
-        
+
+
         max_time_mins: int, optional (default: None)
             How many minutes AutoQTL has to optimize the pipelines (basically how long will the generational process continue).
             If not None, this setting will allow AutoQTL to run until max_time_mins minutes
             elapsed and then stop. AutoQTL will stop earlier if generationsis set and all
             generations are already evaluated.
-        
+
         max_eval_time_mins: float, optional (default: 5)
             How many minutes AutoQTL has to optimize a single pipeline.
             Setting this parameter to higher values will allow AutoQTL to explore more
             complex pipelines, but will also allow AutoQTL to run longer.
-        
+
         random_state: int, optional (default: None)
             Random number generator seed for AutoQTL. Use this parameter to make sure
             that AutoQTL will give you the same results each time you run it against the
             same data set with that seed.
-        
+
         config_dict: a Python dictionary or string, optional (default: None)
             Python dictionary:
                 A dictionary customizing the operators and parameters that
                 AutoQTL uses in the optimization process.
-                For examples, see config_regressor.py 
+                For examples, see config_regressor.py
             Path for configuration file:
                 A path to a configuration file for customizing the operators and parameters that
                 AutoQTL uses in the optimization process.
-                For examples, see config_regressor.py 
-        
+                For examples, see config_regressor.py
+
         template: string (default: None)
             Template of predefined pipeline structure. The option is for specifying a desired structure
             for the machine learning pipeline evaluated in AutoQTL. So far this option only supports
@@ -181,11 +181,11 @@ class AUTOQTLBase(BaseEstimator):
             TransformerMixin or RegressorMixin in scikit-learn) to that step.
             Steps in the template are delimited by "-", e.g. "SelectPercentile-Transformer-Regressor".
             By default value of template is None, AutoQTL generates tree-based pipeline randomly.
-        
+
         warm_start: bool, optional (default: False)
             Flag indicating whether the AutoQTL instance will reuse the population from
             previous calls to fit().
-        
+
         memory: a Memory object or string, optional (default: None)
             If supplied, pipeline will cache each transformer after calling fit. This feature
             is used to avoid computing the fit transformers within a pipeline if the parameters
@@ -209,28 +209,28 @@ class AUTOQTLBase(BaseEstimator):
                 Sudden death before AutoQTL could save optimized pipeline
                 Track its progress
                 Grab pipelines while it's still optimizing
-        
+
         early_stop: int or None (default: None)
             How many generations AutoQTL checks whether there is no improvement in optimization process.
             End optimization process if there is no improvement in the set number of generations.
-        
+
         verbosity: int, optional (default: 0)
             How much information AutoQTL communicates while it's running.
             0 = none, 1 = minimal, 2 = high, 3 = all.
             A setting of 2 or higher will add a progress bar during the optimization procedure.
-        
+
         log_file: string, io.TextIOWrapper or io.StringIO, optional (defaul: sys.stdout)
             Save progress content to a file.
         Returns
         -------
         None
-        
+
         """
         if self.__class__.__name__ == "AUTOQTLBase":
             raise RuntimeError(
                 "Do not instantiate the AUTOQTLBase class directly; use AUTOQTLRegressor instead."
             )
-        
+
         self.population_size = population_size
         self.offspring_size = offspring_size
         self.generations = generations
@@ -247,20 +247,20 @@ class AUTOQTLBase(BaseEstimator):
         self.warm_start = warm_start
         self.memory = memory
         self.verbosity = verbosity
-       
+
         self.random_state = random_state
         self.log_file = log_file
 
     def _setup_template(self, template):
-        """Setup the template for the machine learning pipeline. 
+        """Setup the template for the machine learning pipeline.
         Accordingly set the minimum and maximum height of the initial GP trees. AutoQTL uses the default template, which is None.
-        This allows the GP to generate diverse pipelines and explore more possible solutions. 
-        
+        This allows the GP to generate diverse pipelines and explore more possible solutions.
+
         Parameter
         ---------
         template : string
             template specifying the sequence of selectors/transformers/regressors to be used by designing ML pipelines by GP.
-        
+
         Returns
         -------
         None
@@ -280,35 +280,35 @@ class AUTOQTLBase(BaseEstimator):
                 else:
                     self._min += 1
                     self._max += 1
-        
+
         if self._max - self._min == 1:
             self.tree_structure = False
         else:
             self.tree_structure = True
-    
+
 
     def _setup_scoring_function(self, scoring):
         """Setup the scoring function which will be used to score the pipelines generated.
-        
+
         Parameter
         ---------
         scoring : string or callable function
             the custom scoring function specified by the user while using the package
-            
+
         Returns
         -------
         None
-        
+
         """
         if scoring:
             if isinstance(scoring, str):
                 if scoring not in SCORERS:
                     raise ValueError(
                         "The scoring function {} is not available. "
-                        "choose a valid scoring function from the AutoQTL " 
+                        "choose a valid scoring function from the AutoQTL "
                         "documentation.".format(scoring)
                     )
-                self.scoring_function = scoring 
+                self.scoring_function = scoring
             elif callable(scoring):
                 # Heuristic to ensure user has not passed a metric
                 module = getattr(scoring, "__module__", None)
@@ -329,26 +329,26 @@ class AUTOQTLBase(BaseEstimator):
                     )
                 else:
                     self.scoring_function = scoring
-    
+
     def _setup_config(self, config_dict):
         """Setup the configuration dictionary containing the various ML methods, selectors and transformers.
-        
+
         Parameters
         ----------
         config_dict : Python dictionary or string
             custom config dict containing the customizing operators and parameters that AutoQTL uses in the optimization process
             or the path to the cumtom config dict
-            
+
         Returns
         -------
         None
-        
+
         """
-        
+
         if config_dict:
             if isinstance(config_dict, dict):
                 self._config_dict = config_dict
-            
+
             else:
                 config = self._read_config_file(config_dict)
                 if hasattr(config, "autoqtl_config"):
@@ -366,16 +366,16 @@ class AUTOQTLBase(BaseEstimator):
 
     def _read_config_file(self, config_path):
         """Read the contents of the config dict file given the path.
-        
+
         Parameters
         ----------
         config_path : string
             path to the config dictionary
-        
+
         Returns
         -------
         None
-        
+
         """
         if os.path.isfile(config_path):
             try:
@@ -395,12 +395,12 @@ class AUTOQTLBase(BaseEstimator):
                 "Could not open specified AutoQTL operator config file: "
                 "{}".format(config_path)
             )
-    
+
 
     def _setup_pset(self):
-        """Set up the Primitive set to contain the primitives (functions) which will be used to generate a strongly typed GP tree. 
+        """Set up the Primitive set to contain the primitives (functions) which will be used to generate a strongly typed GP tree.
             Uses the DEAP module class gp.PrimitiveSetTyped(...).
-            
+
         """
         if self.random_state is not None:
             random.seed(self.random_state)
@@ -418,14 +418,14 @@ class AUTOQTLBase(BaseEstimator):
     def _add_operators(self):
         """Add the operators as primitives to the GP primitive set. The operators are in the form of python classes."""
 
-        main_operator_types = ["Regressor", "Selector", "Transformer"] 
-        return_types = [] 
-        self._op_list = [] 
+        main_operator_types = ["Regressor", "Selector", "Transformer"]
+        return_types = []
+        self._op_list = []
 
         if self.template == None: # default pipeline structure
             step_in_type = np.ndarray # Input type of each step/operator in the tree
             step_ret_type = Output_Array # Output type of each step/operator in the tree
-            
+
             for operator in self.operators:
                 arg_types = operator.parameter_types()[0][1:] # parameter_types() is defined in operator_utils.py, it returns the input and return types of an operator class
                 if operator.root:
@@ -434,7 +434,7 @@ class AUTOQTLBase(BaseEstimator):
                 else:
                     # For a non-root operator the return type is n-dimensional array
                     tree_primitive_types = ([step_in_type] + arg_types, step_in_type)
-                
+
                 self._pset.addPrimitive(operator, *tree_primitive_types) # addPrimitive() is a method of the gp.PrimitiveSetTyped(...) class
                 self._import_hash_and_add_terminals(operator, arg_types)
             #self._pset.addPrimitive(CombineDFs(), [step_in_type, step_in_type], step_in_type)
@@ -456,7 +456,7 @@ class AUTOQTLBase(BaseEstimator):
                         return_types.append(step_ret_type)
                     else:
                         step_ret_type = Output_Array
-                
+
                 if step == "CombineDFs":
                     """self._pset.addPrimitive(
                         CombineDFs(), [step_in_type, step_in_type], step_in_type
@@ -483,7 +483,7 @@ class AUTOQTLBase(BaseEstimator):
                     p_types = ([step_in_type] + arg_types, step_ret_type)
                     self._pset.addPrimitive(operator, *p_types)
                     self._import_hash_and_add_terminals(operator, arg_types)
-        self.return_types = [np.ndarray, Output_Array] + return_types 
+        self.return_types = [np.ndarray, Output_Array] + return_types
 
 
     def _import_hash_and_add_terminals(self, operator, arg_types):
@@ -492,7 +492,7 @@ class AUTOQTLBase(BaseEstimator):
             self._import_hash(operator)
             self._add_terminals(arg_types)
             self._op_list.append(operator.__name__)
-    
+
 
     def _import_hash(self, operator):
         """Import required modules into local namespace so that pipelines may be evaluated directly """
@@ -506,7 +506,7 @@ class AUTOQTLBase(BaseEstimator):
 
             for var in operator.import_hash[key]:
                 self.operators_context[var] = eval(var)
-    
+
 
     def _add_terminals(self, arg_types):
         """Adding terminals"""
@@ -552,7 +552,7 @@ class AUTOQTLBase(BaseEstimator):
                 "expr_mut", self._gen_grow_safe, min_=self._min, max_=self._max
                 )
             self._toolbox.register("mutate", self._random_mutation_operator)
-    
+
 
     def _gen_grow_safe(self, pset, min_, max_, type_=None):
         """Generate an expression where each leaf might have a different depth between min_ and max_.
@@ -652,16 +652,16 @@ class AUTOQTLBase(BaseEstimator):
         ----------
         ind1 : DEAP individual
             A list of pipeline operators and model parameters that can be compiled by DEAP into a callable function
-        
+
         ind2 : DEAP individual
             A list of pipeline operators and model parameters that can be compiled by DEAP into a callable function
-        
+
         Returns
         -------
         offspring : DEAP individual formed after crossover
-        
+
         offspring2 : DEAP individual formed after crossover
-        
+
         """
         for _ in range(self._max_mut_loops):
             ind1_copy, ind2_copy = self._toolbox.clone(ind1), self._toolbox.clone(ind2)
@@ -676,7 +676,7 @@ class AUTOQTLBase(BaseEstimator):
                 # predecessor is taken as tuple string representation of two predecessor individuals
                 # generation is set to 'INVALID' such that we can recognize that it should be updated accordingly
                 offspring.statistics["predecessor"] = (str(ind1), str(ind2))
-               
+
                 offspring.statistics["mutation_count"] = (
                     ind1.statistics["mutation_count"]
                     + ind2.statistics["mutation_count"]
@@ -690,7 +690,7 @@ class AUTOQTLBase(BaseEstimator):
 
                 offspring.statistics["generation"] = "INVALID"
                 break
-        
+
         return offspring, offspring2
 
 
@@ -760,7 +760,7 @@ class AUTOQTLBase(BaseEstimator):
 
         return (offspring,)
 
-    
+
     def _compile_to_sklearn(self, expr):
         """Compile a DEAP pipeline into a sklearn pipeline.
         Parameters
@@ -781,9 +781,9 @@ class AUTOQTLBase(BaseEstimator):
             set_param_recursive(
                 sklearn_pipeline.steps, "random_state", self.random_state
             )
-      
+
         return sklearn_pipeline
-    
+
 
     def _get_make_pipeline_func(self):
         """Utility function to make a sklearn pipeline. The function to make the pipeline is choosen according to the presence of resamplers in the config dict."""
@@ -823,7 +823,7 @@ class AUTOQTLBase(BaseEstimator):
             and self._pbar.total <= self._pbar.n
         ):
             self._pbar.total += self._lambda
-        
+
         # check we do not evaluate twice the same individual in one pass.
         _, unique_individual_indices = np.unique(
             [str(ind) for ind in individuals], return_index=True
@@ -856,7 +856,7 @@ class AUTOQTLBase(BaseEstimator):
                 ) # randomly set 5000, to make the pipeline not a suitable pipeline, needs to be changed later
                 self._update_pbar(
                     pbar_msg = "Invalid pipeline encountered. Skipping its evaluation."
-                ) 
+                )
                 continue
             sklearn_pipeline_str = generate_pipeline_code(expr_to_tree(individual, self._pset), self.operators)
             if sklearn_pipeline_str.count("PolynomialFeatures") > 1:
@@ -864,7 +864,7 @@ class AUTOQTLBase(BaseEstimator):
                     individual_str
                 ] = self._combine_individual_stats(
                     5000.0, -float("inf"), -float("inf"), individual.statistics
-                )   
+                )
                 self._update_pbar(
                     pbar_msg = "Invalid pipeline encountered. Skipping its evaluation."
                 )
@@ -877,7 +877,7 @@ class AUTOQTLBase(BaseEstimator):
                     )
                 )"""
                 pass
-                
+
             else:
                 try:
                     # Transform the tree expression into an sklearn pipeline
@@ -898,9 +898,9 @@ class AUTOQTLBase(BaseEstimator):
                     continue
                 eval_individuals_str.append(individual_str)
                 sklearn_pipeline_list.append(sklearn_pipeline)
-            
+
         return operator_counts, eval_individuals_str, sklearn_pipeline_list, stats_dicts
-    
+
 
     def _operator_count(self, individual):
         """Count the number of pipeline operators as a measure of pipeline complexity.
@@ -953,13 +953,13 @@ class AUTOQTLBase(BaseEstimator):
         stats["test_R^2"] = test_R2
         stats["difference_score"] = difference_score
         return stats # returns the entire statistics dictionary of the pipeline with all the components
-    
+
 
     def _evaluate_individuals(
         self, population, features_dataset1, target_dataset1, features_dataset2, target_dataset2, sample_weight=None
     ):
         """Determine the fit of the provided individuals. Evaluate each pipeline and return the fitness scores.
-        
+
         Parameters
         ----------
         population : a list of DEAP individual
@@ -974,18 +974,18 @@ class AUTOQTLBase(BaseEstimator):
             A numpy matrix containing the training and testing target for the individual's evaluation
         sample_weight: array-like {n_samples}, optional
             List of sample weights to balance (or un-balanace) the dataset target as needed
-            
+
         Returns
         -------
         fitnesses_ordered: float
             Returns a list of tuple value indicating the individual's fitness
             according to its performance on the provided data
-            
+
         """
         # Evaluate the individuals with an invalid fitness
         individuals = [ind for ind in population if not ind.fitness.valid]
         num_population = len(population)
-        # update pbar for valid individuals (valid individuals have fitness values) 
+        # update pbar for valid individuals (valid individuals have fitness values)
         if self.verbosity > 0:
             self._pbar.update(num_population - len(individuals))
 
@@ -1017,15 +1017,15 @@ class AUTOQTLBase(BaseEstimator):
                 self._stop_by_max_time_mins()
                 score_on_dataset1 = partial_wrapped_score(sklearn_pipeline=sklearn_pipeline, features=features_dataset1, target=target_dataset1)
                 #score_on_dataset1 = get_score_on_fitted_pipeline(sklearn_pipeline=sklearn_pipeline, X_learner=features_dataset2, y_learner=target_dataset2, X_test=features_dataset1, y_test=target_dataset1, scoring_function=self.scoring_function)
-                
+
                 #score_on_dataset2 = partial_wrapped_score(sklearn_pipeline=sklearn_pipeline, features=features_dataset2, target=target_dataset2)
                 score_on_dataset2 = get_score_on_fitted_pipeline(sklearn_pipeline=sklearn_pipeline, X_learner=features_dataset1, y_learner=target_dataset1, X_test=features_dataset2, y_test=target_dataset2, scoring_function=self.scoring_function)
                 difference_score = (1/(abs(score_on_dataset1-score_on_dataset2)))**(1/4)
                 result_score_list = self._update_val(score_on_dataset2, difference_score, result_score_list)
-                
+
                 test_score = _wrapped_score(sklearn_pipeline, features_dataset1, target_dataset1, self.scoring_function, sample_weight, timeout=max(int(self.max_eval_time_mins*60), 1))
-                
-                
+
+
 
         except (KeyboardInterrupt, SystemExit, StopIteration) as e:
             if self.verbosity > 0:
@@ -1037,7 +1037,7 @@ class AUTOQTLBase(BaseEstimator):
                     ),
                     file=self.log_file_,
                 )
-            
+
             # number of individuals already evaluated in this generation, update those individuals
             num_eval_ind = len(result_score_list)
             self._update_evaluated_individuals_(
@@ -1056,7 +1056,7 @@ class AUTOQTLBase(BaseEstimator):
             self._pareto_front.update(individuals[:num_eval_ind]) # the update() is the inbuilt function of pareto front of DEAP
 
             self._pop = population
-            raise KeyboardInterrupt 
+            raise KeyboardInterrupt
 
         self._update_evaluated_individuals_(
             result_score_list, eval_individuals_str, operator_counts, stats_dicts
@@ -1076,29 +1076,29 @@ class AUTOQTLBase(BaseEstimator):
     # Function to update the progress bar(instance of tqdm)
     def _update_pbar(self, pbar_num=1, pbar_msg=None):
         """Update self._pbar and error message during pipeline evaluation.
-        
+
         Parameters
         ----------
         pbar_num : int
             How many pipelines has been processed
         pbar_msg : None or string
             Error message
-            
+
         Returns
         -------
         None
-        
+
         """
         if not isinstance(self._pbar, type(None)):
             if self.verbosity > 2 and pbar_msg is not None:
-                self._pbar.write(pbar_msg, file=self.log_file) 
+                self._pbar.write(pbar_msg, file=self.log_file)
             if not self._pbar.disable:
                 self._pbar.update(pbar_num)
 
-    # Function to update the two calculated scores for the pipleine in the list of result scores and update self._pbar during pipeline evaluation. 
+    # Function to update the two calculated scores for the pipleine in the list of result scores and update self._pbar during pipeline evaluation.
     def _update_val(self, score1, score2, result_score_list):
         """Update the score of the pipeline evaluation on the two datasets d1 and d2 in the result score list and update self._pbar to show the total number of pipelines proccessed
-        
+
         Parameters
         ----------
         score1 : float or "Timeout"
@@ -1126,7 +1126,7 @@ class AUTOQTLBase(BaseEstimator):
         else:
             score_list.append(score1)
             score_list.append(score2)
-        
+
         result_score_list.append(score_list)
 
         return result_score_list
@@ -1136,7 +1136,7 @@ class AUTOQTLBase(BaseEstimator):
         self, result_score_list, eval_individuals_str, operator_counts, stats_dicts
     ):
         """Update self.evaluated_individuals_ (dict storing the evaluated individuals from the prev gens) and error message during pipeline evaluation.
-        
+
         Parameters
         ----------
         result_score_list : list
@@ -1147,11 +1147,11 @@ class AUTOQTLBase(BaseEstimator):
             A dict where 'key' is the string representation of an individual and 'value' is the number of operators in the pipeline
         stats_dict : dict
             A dict where 'key' is the string representation of an individual and 'value' is a dict containing statistics about the individual
-            
+
         Returns
         -------
         None
-        
+
         """
         for result_score, individual_str in zip(
             result_score_list, eval_individuals_str
@@ -1181,7 +1181,7 @@ class AUTOQTLBase(BaseEstimator):
                         total_mins_elapsed
                     )
                 )
-            
+
     # update the best pipeline generated till present generation
     def _update_top_pipeline(self):
         """Helper function to update the _optimized_pipeline(will store the best pipleine) field. """
@@ -1194,7 +1194,7 @@ class AUTOQTLBase(BaseEstimator):
             for pipeline, pipeline_scores in zip(
                 self._pareto_front.items, reversed(self._pareto_front.keys) # pipeline_score picks up the fitness value tuple in the list of keys
             ):
-                if (pipeline_scores.wvalues[0] > self._optimized_pipeline_score[0]) and (pipeline_scores.wvalues[1] > self._optimized_pipeline_score[1]): 
+                if (pipeline_scores.wvalues[0] > self._optimized_pipeline_score[0]) and (pipeline_scores.wvalues[1] > self._optimized_pipeline_score[1]):
                     self._optimized_pipeline = pipeline
                     self._optimized_pipeline_score = [pipeline_scores.wvalues[0], pipeline_scores.wvalues[1]]
                     #print(pipeline) # trying to debug
@@ -1232,16 +1232,16 @@ class AUTOQTLBase(BaseEstimator):
     # check for an optimized pipeline
     def _check_periodic_pipeline(self, gen):
         """If enough time has passed, save a new optimized pipeline. Currently used in the per generation hook in the optimization loop.
-        
+
         Parameters
         ----------
         gen : int
             Generation number
-            
+
         Returns
         -------
         None
-        
+
         """
         self._update_top_pipeline
         if self.periodic_checkpoint_folder is not None:
@@ -1253,7 +1253,7 @@ class AUTOQTLBase(BaseEstimator):
             ): # variable _output_best_pipeline_period_seconds is set to 30, so periodic pipelines doesn't get saved more often than this
                 self._last_pipeline_write = datetime.now()
                 self._save_periodic_pipeline(gen)
-        
+
         if self.early_stop is not None:
             if self._last_optimized_pareto_front_n_gens >= self.early_stop:
                 raise StopIteration(
@@ -1261,7 +1261,7 @@ class AUTOQTLBase(BaseEstimator):
                     "Will end the optimization process.\n".format(self.early_stop)
                 )
 
-    # Utility function to save a pipeline 
+    # Utility function to save a pipeline
     def _save_periodic_pipeline(self, gen):
         """Saves the most optimized pipeline periodically. """
         try:
@@ -1274,7 +1274,7 @@ class AUTOQTLBase(BaseEstimator):
                 sklearn_pipeline_str = generate_pipeline_code(
                     expr_to_tree(pipeline, self._pset), self.operators
                 ) # get the string format of the sklearn pipeline
-                
+
                 to_write = export_pipeline(
                     pipeline,
                     self.operators,
@@ -1371,34 +1371,34 @@ class AUTOQTLBase(BaseEstimator):
         else:
             return to_write
 
-    
+
     # Function to print out the best pipeline (on basis of two objectives) and also display the entire pareto front to the user
     def _summary_of_best_pipeline(self, features_dataset1, target_dataset1, features_dataset2, target_dataset2):
-        """Print the best pipeline at the end of optimization process, using two datasets. 
-        
+        """Print the best pipeline at the end of optimization process, using two datasets.
+
         Parameters
         ----------
         features_dataset1 : array-like {n_samples, n_features}
             Feature matrix of Dataset1
-        
+
         target_dataset1 : array-like {n_samples}
             Target values of Dataset1
-            
+
         features_dataset2 : array-like {n_samples, n_features}
             Feature matrix of Dataset2
-        
+
         target_dataset2 : array-like {n_samples}
             Target values of Dataset2
-            
+
         Returns
         -------
         self : object
             calling this function sets the self.fitted_pipeline_ variable
-            
+
         """
         # selected_features = features_dataset1
         # selected_target = target_dataset1
-        
+
         # if not self._optimized_pipeline:
         #     raise RuntimeError(
         #         "There was an error in the AUTOQTL optimization process. Please make sure you passed the data to AUTOQTL correctly."
@@ -1422,7 +1422,7 @@ class AUTOQTLBase(BaseEstimator):
         #             #print("Best pipeline:", optimized_pipeline_str)
         #             #print("Score of pipeline on two datasets respectively: ", self._optimized_pipeline_score)
 
-        #         # Store, fit and display the entire Pareto front 
+        #         # Store, fit and display the entire Pareto front
         #         self.pareto_front_fitted_pipelines_ = {} # contains the fitted pipelines present in the pareto front
         #         pareto_front_pipeline_str = {} # contains the pareto front pipeline strings
 
@@ -1438,7 +1438,7 @@ class AUTOQTLBase(BaseEstimator):
         #                 )
         #                 pareto_front_pipeline_str[str(pipeline)] = self.clean_pipeline_string(pipeline)
 
-                
+
         #                 #print("Pareto front individuals: ", pareto_front_pipeline_str)
         #                 # can print the fitness tuples of those pipelines
         #         # Printing the final pipeline
@@ -1452,9 +1452,9 @@ class AUTOQTLBase(BaseEstimator):
 
         ################ NEW VERSION OF THE METHOD ###################
         # all the Pareto front pipelines are fitted using dataset1, i.e, training dataset
-        selected_features = features_dataset1 
+        selected_features = features_dataset1
         selected_target = target_dataset1
-        
+
         if not self._optimized_pipeline:
             raise RuntimeError(
                 "There was an error in the AUTOQTL optimization process. Please make sure you passed the data to AUTOQTL correctly."
@@ -1476,7 +1476,7 @@ class AUTOQTLBase(BaseEstimator):
                         self._optimized_pipeline
                     )
 
-                # Store, fit and display the entire Pareto front 
+                # Store, fit and display the entire Pareto front
                 self._pareto_front_fitted_pipelines_ = {} # contains the fitted pipelines present in the pareto front
                 pareto_front_pipeline_str = {} # contains the pareto front pipeline strings
 
@@ -1491,7 +1491,7 @@ class AUTOQTLBase(BaseEstimator):
                             selected_features, selected_target
                         )
                         pareto_front_pipeline_str[str(pipeline)] = self.clean_pipeline_string(pipeline)
-    
+
 
                 # store score 1 and score 2 from the final pareto front
                 self.score1_final_list =[]
@@ -1504,7 +1504,7 @@ class AUTOQTLBase(BaseEstimator):
                     print('\nTest R^2 = {0},\tDifference Score = {1}'.format(
                             pipeline_scores.wvalues[0],
                             pipeline_scores.wvalues[1]))
-                    
+
                     print(self.print_pipeline_hyper(pipeline))
 
                     # # print the names of the selected features if FS exists in the pipeline
@@ -1529,10 +1529,10 @@ class AUTOQTLBase(BaseEstimator):
 
     # function to print pipeline with hyperparameters
     def print_pipeline_hyper(self, individual, cleaned = False):
-        
+
         """This function cleans up the pipeline representation.
         It also displays all the hyperparameters.
-        
+
         """
         if not cleaned: # cleaned represents whether inputted individual has been compiled into scikit learn form yet
             dirty_string = self._toolbox.compile(expr=individual)
@@ -1545,7 +1545,7 @@ class AUTOQTLBase(BaseEstimator):
         for line in str(dirty_string).splitlines():
             if savePrevLine != "": # if previous line should be combined with current line
                 line = savePrevLine + line.lstrip()
-                savePrevLine = ""  
+                savePrevLine = ""
 
             if "'" in line: # if line includes extra operator to remove
                 if ")" in line: # if extra operator and necessary operator are on same line
@@ -1564,16 +1564,16 @@ class AUTOQTLBase(BaseEstimator):
                     line = re.sub('score_func(.*)', '', line)
                 else: #adds percentile=10 as default parameter in SelectPercentile
                     line = re.sub('score_func(.*)\>', 'percentile=10', line)
-            
+
             #remove unnecessary open parentheses
             if(re.search('\([A-Z]', line) is not None):
                 index = re.search('\([A-Z]', line).start()
                 line = line[:index] + line[index + 1:]
             if(re.match('[a-z]', line.lstrip())):
                 line = line[1:]
-            
+
             #clean start of pipeline
-            line = str.replace(line, "Pipeline(steps=[", "Pipeline steps: ") 
+            line = str.replace(line, "Pipeline(steps=[", "Pipeline steps: ")
 
             #remove unnecessary end parentheses
             line = str.replace(line, "]", "")
@@ -1588,27 +1588,27 @@ class AUTOQTLBase(BaseEstimator):
             elif(re.search('   [A-Z]', line) is not None):
                 count += 1
                 line = "{:>8}{}".format(str(count) + ". ", line.lstrip())
-            else: 
+            else:
                 line = line[8:]
 
             #combine with final result
             pretty_string = pretty_string + line + "\n"
 
-        return pretty_string           
-                        
+        return pretty_string
+
 
     # To get a pipeline outputted in a desired format
     def print_pipeline(self, individual):
         """Print the pipeline in a user-friendly manner.
-        
+
         Parameters
         ----------
         individual: Pareto front individuals
             Individual which should be represented by a pretty string
-            
+
         Returns
         A string suitable for display
-        
+
         """
         dirty_string = str(individual)
 
@@ -1618,10 +1618,10 @@ class AUTOQTLBase(BaseEstimator):
         substring = '__'
         pretty_string = ''
         for (start, end) in reversed(parameter_prefixes):
-    
+
             if (substring in dirty_string[start:end]) or (dirty_string[start:end].isdigit()):
                 continue
-            elif (start, end) == parameter_prefixes[0]: 
+            elif (start, end) == parameter_prefixes[0]:
                 pretty_string = pretty_string + dirty_string[start:end] + "."
             else:
                 pretty_string = pretty_string + dirty_string[start:end] + ' -> '
@@ -1642,7 +1642,7 @@ class AUTOQTLBase(BaseEstimator):
         dirty_string = str(individual)
         # There are many parameter prefixes in the pipeline strings, used solely for
         # making the terminal name unique, eg. LinearSVC__.
-        
+
         parameter_prefixes = [
             (m.start(), m.end()) for m in re.finditer(", [\w]+__", dirty_string)
         ]
@@ -1657,7 +1657,7 @@ class AUTOQTLBase(BaseEstimator):
     # scoring function - which returns score for each pipeline in the pareto front
     def score(self, holdout_features, holdout_target):
         """Returns the holdout R^2 values on the holdout dataset by using each pareto front pipeline trained using the training data.
-        
+
         Parameters
         __________
         holdout_features: array-like {n_samples, n_features}
@@ -1675,7 +1675,7 @@ class AUTOQTLBase(BaseEstimator):
         if len(self._pareto_front_fitted_pipelines_) == 0:
             raise RuntimeError(
                                "No pipeline has been optimized and fitted yet. Please call fit() first.")
-        
+
         holdout_features, holdout_target = self._check_dataset(holdout_features, holdout_target, sample_weight = None)
 
         # If the scoring function is a string, we must adjust to use the sklearn
@@ -1689,7 +1689,7 @@ class AUTOQTLBase(BaseEstimator):
             raise RuntimeError(
                 "The scoring function should either be the name of a scikit-learn scorer or a scorer object"
             )
-        
+
         holdout_score_list = []
         for fitted_pipeline in self._pareto_front_fitted_pipelines_.values():
             print(re.sub("Pipeline steps:", "", self.print_pipeline_hyper(fitted_pipeline, cleaned=True)))
@@ -1702,11 +1702,11 @@ class AUTOQTLBase(BaseEstimator):
             holdout_score_list.append(score)
 
         return holdout_score_list
-    
+
     # function to print the holdout score for the pipeline asked by the user
     def score_user_choice(self, holdout_features, holdout_target, pipeline_no):
         """Returns the holdout R^2 values on the holdout dataset by using the specified Pareto front pipeline trained using the training data.
-        
+
         Parameters
         __________
         holdout_features: array-like {n_samples, n_features}
@@ -1719,12 +1719,12 @@ class AUTOQTLBase(BaseEstimator):
         _______
         R^2 value: list
             List of the estimated holdout set R^2 values for the specified Pareto front pipeline.
-        
+
         """
         if len(self._pareto_front_fitted_pipelines_) == 0:
             raise RuntimeError(
                                "No pipeline has been optimized and fitted yet. Please call fit() first.")
-        
+
         holdout_features, holdout_target = self._check_dataset(holdout_features, holdout_target, sample_weight = None)
 
         # If the scoring function is a string, we must adjust to use the sklearn
@@ -1744,13 +1744,13 @@ class AUTOQTLBase(BaseEstimator):
             holdout_features.astype(np.float64),
             holdout_target.astype(np.float64),
             )
-        
+
         return score
-    
+
     # function definition for predict to get the predicted target values for the holdout dataset
     def predict(self, holdout_features):
         """Returns the predicted target values on the holdout dataset by using each pareto front pipeline trained using the training data.
-        
+
         Parameters
         __________
         holdout_features: array-like {n_samples, n_features}
@@ -1765,7 +1765,7 @@ class AUTOQTLBase(BaseEstimator):
         if len(self._pareto_front_fitted_pipelines_) == 0:
             raise RuntimeError(
                                "No pipeline has been optimized and fitted yet. Please call fit() first.")
-        
+
         holdout_features = self._check_dataset(holdout_features, target=None, sample_weight=None)
 
         predicted_target_dict = {} # The key of the dictionary will be the pipeline name and the value will be a list of the predicted target values.
@@ -1776,14 +1776,14 @@ class AUTOQTLBase(BaseEstimator):
             #pipeline_name_key = self.print_pipeline_hyper(fitted_pipeline, cleaned=True)
             pipeline_name_key = "Pipeline " + "#" + str(i)
             predicted_target_dict[pipeline_name_key] = (np.round(predicted_target_list_per_pipeline, 6)).tolist()
-            
-           
+
+
         return predicted_target_dict
-    
+
     # function to predict the target values based on a particular pareto front pipeline as inputed by the user
     def predict_user_choice(self, holdout_features, pipeline_no):
         """Returns the predicted target values on the holdout dataset by using the chosen Pareto front pipeline trained using the training data.
-        
+
         Parameters
         __________
         holdout_features: array-like {n_samples, n_features}
@@ -1798,18 +1798,18 @@ class AUTOQTLBase(BaseEstimator):
         if len(self._pareto_front_fitted_pipelines_) == 0:
             raise RuntimeError(
                                "No pipeline has been optimized and fitted yet. Please call fit() first.")
-        
+
         # holdout_features, holdout_target = self._check_dataset(holdout_features, holdout_target, sample_weight = None)
         holdout_features = self._check_dataset(holdout_features, target=None, sample_weight = None)
         pareto_front_fitted_pipelines_key_list = list(self._pareto_front_fitted_pipelines_.keys())
         predicted_target_list = self._pareto_front_fitted_pipelines_[pareto_front_fitted_pipelines_key_list[pipeline_no-1]].predict(holdout_features)
-              
+
         return np.round(predicted_target_list, 6).tolist()
-    
+
     # function to give the SHAP feature importance bar graph of a particular pipeline as inputted by the user
     def shap_feature_importance_user_choice(self, features, target, pipeline_no):
         """Gives the SHAP summary plot for the chosen pipeline.
-        
+
         """
         if len(self._pareto_front_fitted_pipelines_) == 0:
             raise RuntimeError(
@@ -1864,13 +1864,13 @@ class AUTOQTLBase(BaseEstimator):
                 if op_class:
                     self.operators.append(op_class)
                     self.arguments += arg_types
-            
+
             self.operators_context = {
                 "make_pipeline" : make_pipeline_func,
                 "make_union" : make_union,
                 "FunctionTransformer" : FunctionTransformer,
                 "copy" : copy,
-            } # Which function to use when these keys are encountered. 
+            } # Which function to use when these keys are encountered.
 
             self._setup_pset() # Setup the primitive set to contain the operators and the arguments
             self._setup_toolbox() # Setup the toolbox to contain the tools such as mutation, crossover, etc
@@ -1892,7 +1892,7 @@ class AUTOQTLBase(BaseEstimator):
             raise ValueError(
                 "Either the parameter generations should be set or a maximum evaluation time should be defined via max_time_mins"
             )
-        
+
         # If no. of generations is not specified and run-time limit is specified, schedule AutoQTL to run till it automatically interrupts itself when the timer runs out
         if self.max_time_mins is not None and self.generations is None:
             self.generations = 1000000
@@ -1904,7 +1904,7 @@ class AUTOQTLBase(BaseEstimator):
             raise ValueError(
                 "The sum of the crossover and mutation probablities must be <=1.0. "
             )
-        
+
         self._pbar = None # declare the progress bar
 
         # setting up the log file
@@ -1921,15 +1921,15 @@ class AUTOQTLBase(BaseEstimator):
         if self.subsample <= 0.0 or self.subsample > 1.0:
             raise ValueError(
                 "The subsample ratio of the training instance must be in the range (0.0, 1.0]. "
-            ) 
+            )
 
         # Put in check for no.of jobs later when using dask
 
-    
+
     # Function to perform a pretest on a sample of data to verify pipelines work with the passed data set
     def _init_pretest(self, features, target):
-        """Set the sample of data used to verify whether pipelines work with the passed data set. We use one dataset in the pretest. 
-        
+        """Set the sample of data used to verify whether pipelines work with the passed data set. We use one dataset in the pretest.
+
         """
         #raise ValueError("Use AutoQTLRegressor")
         print("Use AutoQTLRegressor ")
@@ -1942,20 +1942,20 @@ class AUTOQTLBase(BaseEstimator):
                                 train_size=min(50,int(0.9*features.shape[0]))
                                 )"""
 
-    
+
     # Function to impute missing values
     def _impute_values(self, features):
         """Impute missing values in a feature set.
-        
+
         Parameters
         ----------
         features : array_like {n_samples, n_features}
             A feature matrix
-            
+
         Returns
         -------
         array-like {n_samples, n_features}
-        
+
         """
         if self.verbosity > 1:
             print("Imputing missing values in feature set")
@@ -2002,7 +2002,7 @@ class AUTOQTLBase(BaseEstimator):
         if isinstance(features, np.ndarray):
                 if np.any(np.isnan(features)):
                     self._imputed = True
-        elif isinstance(features, DataFrame): 
+        elif isinstance(features, DataFrame):
                 if features.isnull().values.any():
                     self._imputed = True
 
@@ -2031,18 +2031,18 @@ class AUTOQTLBase(BaseEstimator):
                 "1-D array."
             )
 
-    
+
     # the fit function of AutoQTL
     def fit(self, features, target, random_state, test_size = 0.5, sample_weight = None):
         """Fit an optimized machine learning pipeline.
-        
+
         """
         # split the features, target into training and testing according to the test_size given.
         self.features_dataset1, self.features_dataset2, self.target_dataset1, self.target_dataset2 = train_test_split(features, target, test_size=test_size, random_state=random_state)
         self._fit_init()
         features_dataset1, target_dataset1 = self._check_dataset(self.features_dataset1, self.target_dataset1, sample_weight)
         features_dataset2, target_dataset2 = self._check_dataset(self.features_dataset2, self.target_dataset2, sample_weight)
-        
+
         self._init_pretest(features_dataset1, target_dataset1)
 
         # Randomly collect a subsample of training sample for pipeline optimization process. Do it for both the dataset
@@ -2097,19 +2097,19 @@ class AUTOQTLBase(BaseEstimator):
 
         def pareto_eq(ind1, ind2):
             """Determine whether two individuals are equal on the Pareto front.
-            
+
             Parameters
             ----------
             ind1 : DEAP individual from the GP population
                 First individual to compare
             ind2 : DEAP individual from the GP population
                 Second individual to compare
-            
+
             Returns
             -------
             individuals_equal : bool
                 Boolean indicating whether the two individuals are equal on the Pareto front
-                
+
             """
             return np.allclose(ind1.fitness.values, ind2.fitness.values) # checks whether the fitness values of two individuals are equal or not
 
@@ -2233,14 +2233,14 @@ class AUTOQTLBase(BaseEstimator):
     #      Parameters
     #     ----------
     #     """
-        
+
     #     self.pipeline_for_feature_importance_ = {}
     #     self.fitted_pipeline_for_feature_importance =[]
     #     """for key, value in self.pareto_front_fitted_pipelines_.items():
     #         pipeline_estimator = value
-        
+
     #     print(pipeline_estimator)"""
-        
+
     #     for pipeline in self._pareto_front.items:
     #                 self.pipeline_for_feature_importance_[
     #                     str(pipeline)
@@ -2254,13 +2254,13 @@ class AUTOQTLBase(BaseEstimator):
     #                     self.fitted_pipeline_for_feature_importance.append(self.pipeline_for_feature_importance_[str(pipeline)].fit(
     #                         X, y
     #                     ))
-        
-    #     #print(self.pipeline_for_feature_importance_) 
+
+    #     #print(self.pipeline_for_feature_importance_)
     #     #print(self.fitted_pipeline_for_feature_importance[0])
 
     #     """for key, value in self.pipeline_for_feature_importance_.items():
     #         pipeline_estimator = value"""
-                       
+
     #     pipeline_estimator = self.fitted_pipeline_for_feature_importance[2]
     #     print(pipeline_estimator)
 
@@ -2273,7 +2273,7 @@ class AUTOQTLBase(BaseEstimator):
     #                         pipeline_scores.wvalues[0],
     #                         pipeline_scores.wvalues[1],
     #                         pipeline_to_be_printed))
-    #     # Testing 
+    #     # Testing
     #     """estimators = [('feature_extraction', VarianceThreshold(threshold=0.25)), ('regression', LinearRegression())]
     #     pipeline = Pipeline(estimators)
     #     pipeline.fit(X, y)"""
@@ -2291,9 +2291,9 @@ class AUTOQTLBase(BaseEstimator):
     #     for i in permutation_importance_object.importances_mean.argsort()[::-1]:
     #             print(f"{X.columns[i]:<8}"
     #                 f"{permutation_importance_object.importances_mean[i]:.3f}")
-        
-        
-    
+
+
+
     # def get_shap_values(self, X, y):
     #     estimators = [('feature_extraction', VarianceThreshold(threshold=0.25)), ('regression', LinearRegression())]
     #     pipeline = Pipeline(estimators)
@@ -2308,14 +2308,14 @@ class AUTOQTLBase(BaseEstimator):
     #     shap_values = explainer(X, max_evals=max_evals)
     #     shap.summary_plot(shap_values, X, plot_type='bar')
 
-    
+
      #############################################################################################################################
     # # Getting test R^2 values (basically holdout R^2 values) for the pipelines in the pareto front
     # def get_test_r2(self, d1_X, d1_y, d2_X, d2_y, holdout_X, holdout_y, feature_80, target_80, entire_X, entire_y):
-        
+
     #     self.final_pareto_pipelines_testR2 = {}
     #     self.fitted_final_pareto_pipelines_testR2 =[]
-        
+
     #     for pipeline in self._pareto_front.items:
     #                 self.final_pareto_pipelines_testR2[
     #                     str(pipeline)
@@ -2333,14 +2333,14 @@ class AUTOQTLBase(BaseEstimator):
     #     final_output_file_path = 'EvaluationOnHoldout.txt'
     #     sys.stdout = open(final_output_file_path, "w")
 
-        
+
 
     #     for pareto_pipeline in self.fitted_final_pareto_pipelines_testR2:
     #         print("\n The Pipeline being evaluated: \n", pareto_pipeline)
     #         #score = partial_wrapped_score(pareto_pipeline, holdout_X, holdout_y)
     #         score_80 = pareto_pipeline.score(feature_80, target_80)
     #         score_holdout_entireDataTrained = pareto_pipeline.score(holdout_X, holdout_y)
-            
+
     #         print("\n Entire dataset(80%) R^2 trained on entire dataset(80%): ", score_80)
     #         print("\n Holdout data R^2 trained on entire dataset(80%): ", score_holdout_entireDataTrained)
 
@@ -2414,7 +2414,7 @@ class AUTOQTLBase(BaseEstimator):
 
         # try clearing the figure so that the pareto plot doesn't get superimposed
         plt.clf()
-        
+
         i = 1 # To concatenate pipeline numbers in the png file names
         #fitted_pipeline = self.fitted_pipeline_for_feature_importance[6]
         for fitted_pipeline in self.fitted_pipeline_for_feature_importance:
@@ -2426,7 +2426,7 @@ class AUTOQTLBase(BaseEstimator):
             shap_feature_importance = pd.DataFrame(list(zip(X.columns,vals)), columns=['col_name', 'feature_importance_vals'])
             shap_feature_importance.sort_values(by=['feature_importance_vals'], ascending=False, inplace=True)
             print(shap_feature_importance)
-            # Saving the summary plot 
+            # Saving the summary plot
             shap.summary_plot(shap_values, X, plot_type='bar', show=False)
             plt.tight_layout()
             plt.savefig(f"{save_folder}/Pipeline{i}.png")
@@ -2455,7 +2455,7 @@ class AUTOQTLBase(BaseEstimator):
         max_evals = max(500, 2*num_features + 1)
 
         # dictionary to store column name (feature) as key and list of shap values as value
-        feature_name_importance_dict = {feature_name : [] for feature_name in X.columns}    
+        feature_name_importance_dict = {feature_name : [] for feature_name in X.columns}
 
         # calculating the shap values for each pipeline
         for fitted_pipeline in self.fitted_pipeline_for_feature_importance:
@@ -2474,7 +2474,7 @@ class AUTOQTLBase(BaseEstimator):
         for key in feature_name_importance_dict.keys():
             x.append(key)
             y.append(round(statistics.mean(feature_name_importance_dict[key]), 4))
-        
+
         # clear the existing plot so that there is no overlapping
         plt.clf()
 
@@ -2530,7 +2530,7 @@ class AUTOQTLBase(BaseEstimator):
         # save the PDF file
         pdf.output(pdf_file_path, 'F')
 
-    
+
     # def get_final_output(self, d1_X, d1_y, d2_X, d2_y, holdout_X, holdout_y, d80_X, d80_y, entire_X, entire_y, filename = None):
     def get_final_output(self, entire_X, entire_y, holdout_X, holdout_y, file_path = None):
 
@@ -2540,7 +2540,7 @@ class AUTOQTLBase(BaseEstimator):
         if file_path is None:
             final_output_file_path = ''
         else:
-            final_output_file_path = file_path 
+            final_output_file_path = file_path
 
         text_output_path = final_output_file_path + 'final_output.txt'
         pdf_output_path = final_output_file_path + 'final_output.pdf'
@@ -2619,7 +2619,7 @@ class AUTOQTLBase(BaseEstimator):
         #final pareto front statistics
         print("\n*************************************************")
         print("Final Pareto Front Statistics:\n")
-        
+
         #find regression and encoder types on final pareto front
         reg_list = []
         enc_list = []
@@ -2633,12 +2633,12 @@ class AUTOQTLBase(BaseEstimator):
                 reg = 'RF'
             elif re.search('DecisionTree', string) is not None:
                 reg = 'DT'
-            
+
             if re.search('Encoder', string) is not None:
                 enc = '3'
             if re.search('Heterosis|Recessive|Dominant', string) is not None:
                 enc = '2'
-            
+
             reg_list.append(reg)
             enc_list.append(enc)
 
@@ -2649,7 +2649,7 @@ class AUTOQTLBase(BaseEstimator):
         format_row = "{:>16}{:>8}{:>8}"
         print(format_row.format("", "Number", "Percent"))
         print("--------------------------------")
-        
+
         format_row = "{:>16}{:>8}{:>8.0%}"
         print(format_row.format("LinearRegression", sum(x == 'LR' for x in reg_list), sum(x == 'LR' for x in reg_list)/tot))
         print(format_row.format("MachineLearning", sum(x != 'LR' for x in reg_list), sum(x != 'LR' for x in reg_list)/tot))
@@ -2673,7 +2673,7 @@ class AUTOQTLBase(BaseEstimator):
             print("Pipeline #" + str(i) + ": ")
             print("Test R\u00b2:", score1, "|\tDifference Score:", score2)
             print(re.sub("Pipeline steps:", "", self.print_pipeline_hyper(pipeline, cleaned=True)))
-            
+
             #usable_pipeline = self._toolbox.compile(expr=unclean_pipeline) # scikit learn pipeline
             usable_pipeline = pipeline
             fitted_pipeline = pipeline
@@ -2704,7 +2704,7 @@ class AUTOQTLBase(BaseEstimator):
             # with warnings.catch_warnings():
             #     warnings.simplefilter("ignore")
             #     fitted_pipeline = usable_pipeline.fit(d80_X, d80_y)
-                
+
             # score_80 = fitted_pipeline.score(d80_X, d80_y)
             # score_holdout_entireDataTrained = fitted_pipeline.score(holdout_X, holdout_y)
 
@@ -2714,7 +2714,7 @@ class AUTOQTLBase(BaseEstimator):
 
             # print("\tHoldout R\u00b2: ", score_on_holdout)
             print("\tTrain R\u00b2: ", score_on_train)
-            
+
             # print("\tEntire dataset(80%) R^2 trained on entire dataset(80%): ", score_80)
             # print("\tHoldout data R^2 trained on entire dataset(80%): ", score_holdout_entireDataTrained)
 
@@ -2735,8 +2735,8 @@ class AUTOQTLBase(BaseEstimator):
         #pareto_plot.savefig("ParetoPlot_check.png")
         plot2 = self.average_feature_importance(entire_X, entire_y) # avg SHAP importance plot
         plot2_path = "plot2.png"
-        plot2.savefig(plot2_path)   
-        plot2.close()  
+        plot2.savefig(plot2_path)
+        plot2.close()
         #avg_shap_plot.savefig("AvgShapPlot_check.png")
 
         # # define the path to the plots and save the plot images to separate file paths
@@ -2744,10 +2744,10 @@ class AUTOQTLBase(BaseEstimator):
         # plot2_path = "plot2.png"
         # plot1.savefig(plot1_path)
         # plot1.close()
-        # plot2.savefig(plot2_path)   
-        # plot2.close()    
+        # plot2.savefig(plot2_path)
+        # plot2.close()
 
-        
+
         # close the file
         sys.stdout.close()
         # close the file and redirect standard output back to console
@@ -2765,7 +2765,7 @@ class AUTOQTLBase(BaseEstimator):
         plt.scatter(self.score1_final_list, self.score2_final_list, edgecolors='black')
         plt.plot(self.score1_final_list, self.score2_final_list, color='black', linestyle='dashed')  # Change color and linestyle here
         for i, txt in enumerate(n):
-            plt.annotate(txt, (self.score1_final_list[i], self.score2_final_list[i]), 
+            plt.annotate(txt, (self.score1_final_list[i], self.score2_final_list[i]),
                                xytext = (self.score1_final_list[i] - 0.05*rangex, self.score2_final_list[i] - 0.05*rangey)) # Adjust the xytext values here
         plt.title('autoQTL: Final Pareto Front')
         plt.xlabel('Test R2')
@@ -2776,4 +2776,3 @@ class AUTOQTLBase(BaseEstimator):
         #plt.savefig('pareto_plot_BMIPathways_12.png')
         #plt.close()
         return plt
-        
