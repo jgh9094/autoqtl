@@ -86,6 +86,8 @@ class AUTOQTLBase(BaseEstimator):
         mutation_rate = 0.9,
         crossover_rate = 0.1,
         scoring = None,
+        sec_scoring = None, # secondary scoring function
+        ss_weight=None, # weight of secondary scoring function
         subsample = 1.0,
         max_time_mins = None,
         max_eval_time_mins = 5,
@@ -248,6 +250,8 @@ class AUTOQTLBase(BaseEstimator):
         self.warm_start = warm_start
         self.memory = memory
         self.verbosity = verbosity
+        self.sec_scoring = sec_scoring
+        self.ss_weight = ss_weight
 
         self.random_state = random_state
         self.log_file = log_file
@@ -524,7 +528,10 @@ class AUTOQTLBase(BaseEstimator):
         """Setup the toolbox. ToolBox is a DEAP package class, which is a toolbox for evolution containing all the evolutionary operators. """
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            creator.create("FitnessMulti", base.Fitness, weights=(1.0, 1.0)) # Weights set according to requirement of maximizing two objectives (Test R^2 and difference score)
+            if self.sec_scoring is None:
+                creator.create("FitnessMulti", base.Fitness, weights=(1.0, 1.0)) # Weights set according to requirement of maximizing two objectives (Test R^2 and difference score)
+            else:
+                creator.create("FitnessMulti", base.Fitness, weights=(1.0, self.ss_weight))
             creator.create(
                 "Individual",
                 gp.PrimitiveTree,
@@ -1014,6 +1021,15 @@ class AUTOQTLBase(BaseEstimator):
 
         result_score_list = []
 
+        # if given a second score, partial wrap the second score
+        if self.sec_scoring is not None:
+            partial_wrapped_score_sec = partial(
+                _wrapped_score,
+                scoring_function = self.sec_scoring,
+                sample_weight = sample_weight,
+                timeout=max(int(self.max_eval_time_mins * 60), 1)
+            )
+
         try:
             # check time limit before pipeline evaluation
             self._stop_by_max_time_mins()
@@ -1028,7 +1044,15 @@ class AUTOQTLBase(BaseEstimator):
 
                 #score_on_dataset2 = partial_wrapped_score(sklearn_pipeline=sklearn_pipeline, features=features_dataset2, target=target_dataset2)
                 score_on_dataset2 = get_score_on_fitted_pipeline(sklearn_pipeline=sklearn_pipeline, X_learner=features_dataset1, y_learner=target_dataset1, X_test=features_dataset2, y_test=target_dataset2, scoring_function=self.scoring_function)
-                difference_score = (1/(abs(score_on_dataset1-score_on_dataset2)))**(1/4)
+
+                # check if we are doing secondary scoring or defult difference scoring
+                if self.sec_scoring is not None:
+                    difference_score = partial_wrapped_score_sec(sklearn_pipeline=sklearn_pipeline, features=features_dataset2, target=target_dataset2)
+                else:
+                    difference_score = (1/(abs(score_on_dataset1-score_on_dataset2)))**(1/4)
+
+
+
                 result_score_list = self._update_val(score_on_dataset2, difference_score, result_score_list)
 
                 test_score = _wrapped_score(sklearn_pipeline, features_dataset1, target_dataset1, self.scoring_function, sample_weight, timeout=max(int(self.max_eval_time_mins*60), 1))
@@ -1509,8 +1533,14 @@ class AUTOQTLBase(BaseEstimator):
                 print("Final Pareto Front at the end of the optimization process: ")
                 for pipeline, pipeline_scores in zip(self._pareto_front.items, reversed(self._pareto_front.keys)):
                     #pipeline_to_be_printed = self.print_pipeline(pipeline) # change to EZ version
-                    print('\nTest R^2 = {0},\tDifference Score = {1}'.format(
+                    if self.sec_scoring is None:
+                        print('\nTest R^2 = {0},\tDifference Score = {1}'.format(
+                                pipeline_scores.wvalues[0],
+                                pipeline_scores.wvalues[1]))
+                    else:
+                        print('\nTest R^2 = {0},\t{1}= {2}'.format(
                             pipeline_scores.wvalues[0],
+                            self.sec_scoring,
                             pipeline_scores.wvalues[1]))
 
                     print(self.print_pipeline_hyper(pipeline))
@@ -2163,6 +2193,7 @@ class AUTOQTLBase(BaseEstimator):
                     verbose=self.verbosity,
                     per_generation_function=self._check_periodic_pipeline,
                     log_file=self.log_file_,
+                    sscore=self.sec_scoring
                 )
         # Allow for certain exceptions to signal a premature fit() cancellation
         except(KeyboardInterrupt, SystemExit, StopIteration) as e:
@@ -2429,7 +2460,10 @@ class AUTOQTLBase(BaseEstimator):
         print("\n*************************************************")
         print("Evolution History:")
         format_row = "{:>10}{:>16}{:>18}"
-        print(format_row.format("", "Best Test R\u00b2 score", "Best difference score"))
+        if self.sec_scoring is None:
+            print(format_row.format("", "Best Test R\u00b2 score", "Best difference score"))
+        else:
+            print(format_row.format("", "Best Test R\u00b2 score", self.sec_scoring))
         format_row = "{:>10}{:>16.5f}{:>18.5f}"
         try:
             for log in self._logbook:
@@ -2514,7 +2548,11 @@ class AUTOQTLBase(BaseEstimator):
         print(format_row.format("2-LevelEncoder", sum(x == '2' for x in enc_list), sum(x == '2' for x in enc_list)/tot))
 
         print("\nRange of Test R\u00b2:         ({:.5f}, {:.5f})".format(min(self.score1_final_list), max(self.score1_final_list)))
-        print("Range of Difference Score: ({:.5f}, {:.5f})".format(min(self.score2_final_list), max(self.score2_final_list)))
+
+        if self.sec_scoring is None:
+            print("Range of Difference Score: ({:.5f}, {:.5f})".format(min(self.score2_final_list), max(self.score2_final_list)))
+        else:
+            print("Range of {}: ({:.5f}, {:.5f})".format(self.sec_scoring, min(self.score2_final_list), max(self.score2_final_list)))
 
         #pipelines on final pareto front
         print("\n*************************************************")
@@ -2523,7 +2561,10 @@ class AUTOQTLBase(BaseEstimator):
         for pipeline, score1, score2 in zip(self._pareto_front_fitted_pipelines_.values(), self.score1_final_list, self.score2_final_list):
             i = i +  1
             print("Pipeline #" + str(i) + ": ")
-            print("Test R\u00b2:", score1, "|\tDifference Score:", score2)
+            if self.sec_scoring is None:
+                print("Test R\u00b2:", score1, "|\tDifference Score:", score2)
+            else:
+                print("Test R\u00b2:", score1, "|\t", self.sec_scoring, ":", score2)
             print(re.sub("Pipeline steps:", "", self.print_pipeline_hyper(pipeline, cleaned=True)))
 
             #usable_pipeline = self._toolbox.compile(expr=unclean_pipeline) # scikit learn pipeline
@@ -2621,7 +2662,10 @@ class AUTOQTLBase(BaseEstimator):
                                xytext = (self.score1_final_list[i] - 0.05*rangex, self.score2_final_list[i] - 0.05*rangey)) # Adjust the xytext values here
         plt.title('autoQTL: Final Pareto Front')
         plt.xlabel('Test R2')
-        plt.ylabel('Difference Score')
+        if self.sec_scoring is None:
+            plt.ylabel('Difference Score')
+        else:
+            plt.ylabel('Test ' + self.sec_scoring)
         # Set xlim and ylim in reverse order
         plt.xlim(min(self.score1_final_list) - 0.1*rangex, max(self.score1_final_list) + 0.1*rangex)
         plt.ylim(min(self.score2_final_list) - 0.1*rangey, max(self.score2_final_list) + 0.1*rangey)

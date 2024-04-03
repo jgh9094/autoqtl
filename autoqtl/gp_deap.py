@@ -250,7 +250,7 @@ def initialize_stats_dict(individual):
 # eaMuPlusLambda algorithm for the GP
 def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, pbar,
                    stats=None, halloffame=None, verbose=0,
-                   per_generation_function=None, log_file=None):
+                   per_generation_function=None, log_file=None, sscore=None):
     """This is the :math:`(\mu + \lambda)` evolutionary algorithm.
     :param population: A list of individuals.
     :param toolbox: A :class:`~deap.base.Toolbox` that contains the evolution
@@ -360,12 +360,22 @@ def eaMuPlusLambda(population, toolbox, mu, lambda_, cxpb, mutpb, ngen, pbar,
                             file=log_file)
                 for pipeline, pipeline_scores in zip(halloffame.items, reversed(halloffame.keys)):
                     pipeline_to_be_printed = print_pareto_pipeline(pipeline)
-                    pbar.write('\nTest R^2 = {0},\tDifference Score = {1},\tPipeline: {2}'.format(
-                            pipeline_scores.wvalues[0],
-                            pipeline_scores.wvalues[1],
-                            pipeline
-                        ),
-                        file=log_file
+                    if sscore is None:
+                        pbar.write('\nTest R^2 = {0},\tDifference Score = {1},\tPipeline: {2}'.format(
+                                pipeline_scores.wvalues[0],
+                                pipeline_scores.wvalues[1],
+                                pipeline
+                            ),
+                            file=log_file
+                    )
+                    else:
+                        pbar.write('\nTest R^2 = {0},\t{1} = {2},\tPipeline: {3}'.format(
+                                pipeline_scores.wvalues[0],
+                                sscore,
+                                pipeline_scores.wvalues[1],
+                                pipeline
+                            ),
+                            file=log_file
                     )
 
         # after each population save a periodic pipeline
